@@ -1,0 +1,6 @@
+INFO:     127.0.0.1:52235 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52235 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52235 - "GET /reportes/inventario/excel?umbral_bajo=5 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63068 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63068 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51276 - "GET / HTTP/1.1" 200 OK
