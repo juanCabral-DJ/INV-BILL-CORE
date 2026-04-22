@@ -21,9 +21,8 @@ class Settings(BaseSettings):
     invoice_tax_rate: float = 0.18
     frontend_url: str = ""
     cors_origins: str = ""
-
-    # Configuracion para leer el archivo .env
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+ 
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore") 
 
     def model_post_init(self, __context) -> None:
         if self.db_connection_url.startswith("postgresql://"):
