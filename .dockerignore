@@ -1,0 +1,12 @@
+.git
+.gitignore
+.idea
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+server.err.log
+server.out.log
+tmp_factura_test.pdf

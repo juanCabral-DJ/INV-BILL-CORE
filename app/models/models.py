@@ -33,20 +33,6 @@ class Categoria(Base):
     productos: Mapped[List["Producto"]] = relationship(back_populates="categoria")
 
 
-class Cliente(Base):
-    __tablename__ = "clientes"
-
-    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
-    documento_identidad: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-    nombre_completo: Mapped[str] = mapped_column(String(150), nullable=False)
-    telefono: Mapped[Optional[str]] = mapped_column(String(20))
-    email: Mapped[Optional[str]] = mapped_column(String(100))
-    fecha_registro: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"), nullable=False)
-
-    facturas: Mapped[List["Factura"]] = relationship(back_populates="cliente")
-
-
 class Producto(Base):
     __tablename__ = "productos"
 
@@ -64,14 +50,26 @@ class Producto(Base):
     detalles_factura: Mapped[List["DetalleFactura"]] = relationship(back_populates="producto")
 
 
+class Usuario(Base):
+    __tablename__ = "usuarios"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
+    correo: Mapped[str] = mapped_column(String(150), unique=True, index=True, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, server_default=text("true"), nullable=False)
+
+
 class Factura(Base):
     __tablename__ = "facturas"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     numero_factura: Mapped[int] = mapped_column(Identity(start=1), unique=True, index=True, nullable=False)
-    cliente_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clientes.id"), nullable=False)
+    cliente_nombre: Mapped[str] = mapped_column(String(150), nullable=False)
     fecha_emision: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True, nullable=False)
     monto_total: Mapped[Decimal] = mapped_column(Numeric(18, 2), nullable=False)
+    monto_pagado: Mapped[Decimal] = mapped_column(Numeric(18, 2), server_default=text("0"), nullable=False)
+    cambio_devuelto: Mapped[Decimal] = mapped_column(Numeric(18, 2), server_default=text("0"), nullable=False)
     estado: Mapped[str] = mapped_column(String(20), default="PAGADA", nullable=False)
     usuario_vendedor: Mapped[str] = mapped_column(String(100), nullable=False)
     motivo_anulacion: Mapped[Optional[str]] = mapped_column(String(255))
@@ -81,7 +79,6 @@ class Factura(Base):
         CheckConstraint("estado IN ('PAGADA', 'ANULADA')", name="chk_facturas_estado"),
     )
 
-    cliente: Mapped["Cliente"] = relationship(back_populates="facturas")
     detalles: Mapped[List["DetalleFactura"]] = relationship(
         back_populates="factura",
         cascade="all, delete-orphan",
@@ -106,6 +103,10 @@ class MovimientoInventario(Base):
     )
 
     producto: Mapped["Producto"] = relationship(back_populates="movimientos")
+
+    @property
+    def producto_nombre(self) -> Optional[str]:
+        return self.producto.nombre if self.producto else None
 
 
 class DetalleFactura(Base):

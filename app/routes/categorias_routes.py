@@ -1,19 +1,27 @@
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.db_connection import get_db
 from app.schemas.schemas import CategoriaCreate, CategoriaResponse, CategoriaUpdate
 from app.services.categorias_service import categorias_service
 
-router = APIRouter(prefix="/categorias", tags=["categorias"])
+router = APIRouter(
+    prefix="/categorias",
+    tags=["categorias"],
+)
 
 
+@router.get("", response_model=List[CategoriaResponse], include_in_schema=False)
 @router.get("/", response_model=List[CategoriaResponse])
-def listar_categorias(db: Session = Depends(get_db)):
-    return categorias_service.get_multi(db=db)
+def listar_categorias(
+    offset: int = Query(0, ge=0),
+    limit: int = Query(15, ge=1),
+    db: Session = Depends(get_db),
+):
+    return categorias_service.get_multi(db=db, skip=offset, limit=limit)
 
 
 @router.get("/{categoria_id}", response_model=CategoriaResponse)
@@ -24,6 +32,7 @@ def obtener_categoria(categoria_id: UUID, db: Session = Depends(get_db)):
     return categoria
 
 
+@router.post("", response_model=CategoriaResponse, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 @router.post("/", response_model=CategoriaResponse, status_code=status.HTTP_201_CREATED)
 def crear_categoria(categoria_in: CategoriaCreate, db: Session = Depends(get_db)):
     return categorias_service.create(db=db, obj_in=categoria_in)

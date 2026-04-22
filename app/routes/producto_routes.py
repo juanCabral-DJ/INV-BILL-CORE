@@ -5,24 +5,50 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.db.db_connection import get_db
-from app.schemas.schemas import ProductoCreate, ProductoResponse, ProductoUpdate
+from app.schemas.schemas import (
+    ConteoProductosResponse,
+    ProductoCreate,
+    ProductoResponse,
+    ProductoUpdate,
+    SumaPrecioCompraResponse,
+)
+from app.services.movimiento_service import LOW_STOCK_THRESHOLD
 from app.services.productos_service import productos_service
 
-router = APIRouter(prefix="/productos", tags=["productos"])
+router = APIRouter(
+    prefix="/productos",
+    tags=["productos"],
+)
 
 
 @router.get("/", response_model=List[ProductoResponse])
 def listar_productos(
     categoria_id: UUID | None = None,
-    stock_bajo: bool = False,
-    umbral: int = Query(5, ge=0),
+    offset: int = Query(0, ge=0),
+    limit: int = Query(15, ge=1),
     db: Session = Depends(get_db),
 ):
-    if stock_bajo:
-        return productos_service.get_stock_bajo(db=db, umbral=umbral)
     if categoria_id:
-        return productos_service.get_by_categoria(db=db, categoria_id=categoria_id)
-    return productos_service.get_multi(db=db)
+        return productos_service.get_by_categoria(db=db, categoria_id=categoria_id, skip=offset, limit=limit)
+    return productos_service.get_multi(db=db, skip=offset, limit=limit)
+
+
+@router.get("/stock-bajo/conteo", response_model=ConteoProductosResponse)
+def contar_productos_stock_bajo(
+    umbral: int = Query(LOW_STOCK_THRESHOLD, ge=0),
+    db: Session = Depends(get_db),
+):
+    return {"total": productos_service.count_stock_bajo(db=db, umbral=umbral)}
+
+
+@router.get("/activos/conteo", response_model=ConteoProductosResponse)
+def contar_productos_activos(db: Session = Depends(get_db)):
+    return {"total": productos_service.count_activos(db=db)}
+
+
+@router.get("/precio-compra/suma", response_model=SumaPrecioCompraResponse)
+def sumar_precio_compra_productos(db: Session = Depends(get_db)):
+    return {"total": productos_service.sum_valor_precio_compra(db=db)}
 
 
 @router.get("/{producto_id}", response_model=ProductoResponse)
