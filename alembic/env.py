@@ -1,23 +1,22 @@
 from logging.config import fileConfig
 import os
-from app.models import models
-from pathlib import Path
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from app.models import models
 from dotenv import load_dotenv
 
 load_dotenv()
 config = context.config
 
-# Sobrescribir la URL de la base de datos con la del .env
-db_url = os.getenv("DB_CONNECTION_URL")
+# Sobrescribir la URL de la base de datos con variables de entorno.
+db_url = os.getenv("DB_CONNECTION_URL") or os.getenv("DATABASE_URL")
 if db_url:
+    if db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
     config.set_main_option("sqlalchemy.url", db_url)
-
-print("DB URL:", os.getenv("DB_CONNECTION_URL"))
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

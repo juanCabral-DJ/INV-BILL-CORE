@@ -10,3 +10,6 @@ __pycache__
 server.err.log
 server.out.log
 tmp_factura_test.pdf
+*.ps1
+docker-compose.yml
+otel-config.yaml
